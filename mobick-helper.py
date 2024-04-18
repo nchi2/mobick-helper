@@ -1,26 +1,30 @@
 import itertools
 from bitcoin import *
 
-# 잘못된 자리의 인덱스와 프라이빗 키의 나머지 부분
-wrong_indices = [0,1,2]  # 실제 인덱스로 교체 필요
-partial_private_key = 'cdyf4daJyA1FRQYcBrUWPuU3SwiUvPCimnyCSD3h6pfu27LKHQts'  # 예시 키, 실제 값으로 대체 필요
+def find_valid_private_key(base_key, max_index, indices):
+    base58_characters = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+    # 주어진 인덱스에 대해 모든 가능한 Base58 문자를 대입
+    for combo in itertools.product(base58_characters, repeat=len(indices)):
+        test_key = list(base_key)
+        for idx, char in zip(indices, combo):
+            test_key[idx] = char
+        test_key_str = ''.join(test_key)
+        if is_privkey(test_key_str):
+            print(f"Valid private key found: {test_key_str}")
+            return True  # 유효한 키를 찾으면 True 반환
+    return False  # 유효한 키를 찾지 못하면 False 반환
 
-# 가능한 모든 Base58 문자
-base58_characters = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+# 초기 설정
+partial_private_key = '프라이빗키'
+initial_indices = [1, 2, 3]
+max_index = len(partial_private_key) - 1
 
-# 잘못된 각 자리에 대해 모든 가능한 Base58 문자를 대입
-for combo in itertools.product(base58_characters, repeat=len(wrong_indices)):
-    # 잘못된 자리에 문자 채우기
-    test_key = list(partial_private_key)
-    for idx, char in zip(wrong_indices, combo):
-        test_key[idx] = char
-    
-    # 리스트를 문자열로 변환
-    test_key_str = ''.join(test_key)
-    
-    # 프라이빗 키의 유효성 검사
-    if is_privkey(test_key_str):
-        print(f"Valid private key found: {test_key_str}")
-        break  # 유효한 키를 찾으면 루프 종료
-else:
-    print("No valid private key found.")  # 유효한 키를 찾지 못한 경우
+# 초기 인덱스 세트에서 시작
+if not find_valid_private_key(partial_private_key, max_index, initial_indices):
+    # 초기 세트가 실패하면 다른 조합 시도
+    for i in range(max(initial_indices) + 1, max_index + 1):
+        new_indices = initial_indices[:-1] + [i]
+        if find_valid_private_key(partial_private_key, max_index, new_indices):
+            break
+    else:
+        print("No valid private key found after trying all combinations.")
